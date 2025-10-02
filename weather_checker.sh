@@ -26,7 +26,7 @@ fi
 
 BASE_URL="https://api.openweathermap.org/data/2.5/weather"
 #Use metric units (Celsius). Change to imperial for Fahrenheit.
-RESP="$(curl -s -G--fail \
+RESP="$(curl -s -G --fail \
 	--data-urlencode "q=${CITY}" \
 	--data-urlencode "appid=${API_KEY}" \
 	--data-urlencode "units=metric" \
