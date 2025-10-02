@@ -36,8 +36,8 @@ RESP="$(curl -s -G --fail \
 }
 
 # if jq isn't installed, this will fail - jq is strongly recommended.
-if ! command -v jq &>/dell/null; then
-	echo Please install jq to parse JSON (e.g. sudo apt install jq)."
+if ! command -v jq &>/dev/null; then
+	echo "Please install jq to parse JSON (e.g. sudo apt install jq)."
 	echo "Raw response:"
 	echo "$RESP"
 	exit 4
@@ -51,12 +51,12 @@ if [ "$CODE" != "200" ] && [ "$CODE"!="200" ];then
 	exit 5
 fi
 
-CITY_NAME=$(echo "$RESP | jq -r '.name + ", " + (.sys.country // "")')
+CITY_NAME=$(echo "$RESP" | jq -r '.name + ", " + (.sys.country // "")')
 WEATHER_MAIN=$(echo "$RESP" | jq -r '.weather[0].main')
 WEATHER_DESC=$(echo "$RESP" | jq -r '.weather[0].description')
-TEMP=$(echo "RESP" | jq -r '.main.temp')
-FEELS=$(echo  "RESP" | jq -r '.main.feels_like')
-HUMIDITY=$(echo "RESP" | jq -r '.main.humidity')
+TEMP=$(echo "$RESP" | jq -r '.main.temp')
+FEELS=$(echo  "$RESP" | jq -r '.main.feels_like')
+HUMIDITY=$(echo "$RESP" | jq -r '.main.humidity')
 WIND_SPEED=$(echo "$RESP" | jq -r '.wind.speed')
 SUNRISE=$(echo "$RESP" | jq -r '.sys.sunrise')
 SUNSET=$(echo "$RESP" | jq -r '.sys.sunset')
