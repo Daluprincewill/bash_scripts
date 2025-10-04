@@ -3,7 +3,7 @@
 #Price checker script uses APIs to get information about current asset price and displays output in shell
 #Uses exchangerate.host API
 #Usage:
-#	export MY_KEY="your_api_key"
+	export MY_KEY="f1957fd90993f4958351f977bb96a95d"
 #	./price_checker BTC USD
 #	./price_checker NGN USD
 
@@ -21,7 +21,7 @@ fi
 BASE="$1"
 TARGET="$2"
 
-API_URL="https://api.exchangerate.host/convert?access_key=${MY_KEY}&from=${BASE}&to=${TARGET}"
+API_URL="https://api.exchangerate.host/convert?access_key=${MY_KEY}&from=${BASE}&to=${TARGET}&amount=1"
 
 #Make the API Request
 RESP=$(curl -s --fail "$API_URL")|| {
@@ -46,7 +46,7 @@ if [ "$SUCCESS" != "true" ]; then
 fi
 
 RATE=$(echo "$RESP" | jq -r '.result')
-DATE$(echo "$RESP" | jq -r '.date')
+DATE=$(echo "$RESP" | jq -r '.date')
 
 cat <<EOF
 Exchange Rate Checker
