@@ -3,7 +3,7 @@
 #Price checker script uses APIs to get information about current asset price and displays output in shell
 #Uses exchangerate.host API
 #Usage:
-	export MY_KEY="f1957fd90993f4958351f977bb96a95d"
+	export MY_KEY="your-api-key"
 #	./price_checker BTC USD
 #	./price_checker NGN USD
 
