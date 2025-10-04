@@ -4,7 +4,7 @@
 # Usage:
 #	OWM_API_KEY="your_api_key" ./weather_checker.sh "Lagos"
 # or export OWM_API_KEY beforehand:
-#	export OWM_API_KEY="your_api_key"
+	export OWM_API_KEY="df1e4768b198baf78120729cd4ed0837"
 #	./weather_checker.sh "Lagos"
 
 
