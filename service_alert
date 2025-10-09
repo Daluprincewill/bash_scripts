@@ -1,0 +1,45 @@
+#!/bin/bash
+# service_alert -  Notify via webhook when a systemd service crashes
+#export the webhook URL for slack or discord channel
+#	export ALERT_WEBHOOK="your_URL_here"
+# Optional: Add to crontab to check every  interval
+# Example: */5 * * * * /home/youruser/service_alert nginx &>> /var/log/service_alert.log
+
+#Enable safemode
+set -euo pipefail
+
+SERVICE_NAME="${1 :-}"
+WEBHOOK_URL="${ALERT_WEBHOOK :-}"
+
+if [ -z "$SERVICE_NAME" ]; then
+	echo "Usage: $0 <service_name>"
+	echo "Example: $0 nginx"
+	exit 1
+fi
+
+if [ -z "$WEBHOOK URL" ]; then
+	echo "Error: ALERT_WEBHOOK not set."
+	exit 2
+fi
+# ===== Check Service Status =============
+
+if systemctl is-active --quiet "$SERVICE_NAME"; then
+	echo  "$SERVICE_NAME is running"
+	exit 0
+else
+	STATUS=$(systemctl is-failed "$SERVICE_NAME" || true)
+	MESSAGE=" Service Alert: *${SERVICE_NAME}* on $(hostname) is *${STATUS}*!"
+	TIMESTAMP=$(date -u '+%F %H:%M:%S UTC')
+
+	echo "Sending alert: $MESSAGE"
+
+	#==== discord/slack payload =======
+	payload=$( jq -n --arg content "${MESSAGE}\nTime: ${TIMESTAMP}" \
+	'{content: $content}')
+
+	# ==== Send the alert ======
+	curl -s -X POST -H "Content-Type: application/json" \
+	-d "$payload" "$WEBHOOK_URL" > /dev/null
+
+	exit 3
+fi
