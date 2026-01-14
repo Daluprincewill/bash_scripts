@@ -114,7 +114,7 @@ services:
       - /srv/webserver/nginx/conf.d:/etc/nginx/conf.d
       - /var/log/nginx:/var/log/nginx
 
-EOF    
+EOF
 }
 
 # ---------------------------------------
@@ -193,9 +193,23 @@ for logfile in /var/log/nginx/access.log /var/log/nginx/error.log; do
         chmod 644 "$logfile"
     fi
 done
-# --------------- Running main ---------------------------
-main
+# --------------- Bootstrap idempotency check ---------------------------
 
+if systemctl is-active --quiet nginx; then
+	log "Stopping host nginx to free port 80"
+	systemctl stop nginx
+	systemctl disable nginx
+fi
+
+
+if systemctl is-active --quiet apache2; then
+	log "Stopping host apache2 to free port 80"
+	systemctl stop apache2
+	systemctl disable apache2
+fi
+
+# -----------------------------------------------------------------------
+main
 systemctl restart fail2ban
 fail2ban-client status
 fail2ban-client status nginx-badbots
