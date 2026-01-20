@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# ----------------- Enable safemode -----------------------------------------------------
+set -euo pipefail
+
+
 # ------ Config files and variable declarations -------------------------------------------
 log (){
     echo -e "[INFO] $1"
@@ -96,10 +100,14 @@ start_docker(){
 # ----------------------------------------
 # Nginx via docker compose
 # ----------------------------------------
+
+COMPOSE_DIR="/srv/webserver"
+mkdir -p "$COMPOSE_DIR"
+
 create_compose_file(){
     log "Creating docker-compose.yml..."
 
-    cat <<'EOF' > docker-compose.yml
+    cat <<'EOF' > "$COMPOSE_DIR/docker-compose.yml"
 
 version: "3.8"
 
@@ -127,7 +135,7 @@ main (){
     create_compose_file
 
     log "Starting nginx container..."
-    docker compose up -d
+    docker compose -f /srv/webserver/docker-compose.yml up -d
 
     log "Deployment complete. Nginx is running on port 80"
 }
