@@ -60,7 +60,7 @@ apt install curl wget ca-certificates gnupg lsb-release unattended-upgrades
 
 # --------------------------  Time, Locale & Basics --------------------------------------
 
-timedatectl set-timezone African/Lagos
+timedatectl set-timezone Africa/Lagos
 systemctl enable systemd-timesyncd
 
 # -------------------------- Docker install, setup & config ------------------------------
@@ -129,68 +129,72 @@ EOF
 # Main
 # ---------------------------------------
 main (){
-    install_docker
-    install_docker_compose
-    start_docker
-    create_compose_file
+	install_docker
+	install_docker_compose
+	start_docker
+	create_compose_file
 
-    log "Starting nginx container..."
-    docker compose -f /srv/webserver/docker-compose.yml up -d
+	log "Starting nginx container..."
+	docker compose -f /srv/webserver/docker-compose.yml up -d
 
-    log "Deployment complete. Nginx is running on port 80"
+	log "Deployment complete. Nginx is running on port 80"
 }
 
-# -----------------  configure ufw ------------------
+# -----------------  configure ufw --------------------------------------------
+ufw_config(){
+	if ! command -v ufw >/dev/null 2>&1; then
+	    echo -e "Firewall not installed - installing ufw /a"
+	    apt install -y ufw
+	fi
 
-if ! command -v ufw >/dev/null 2>&1; then
-    echo -e "Firewall not installed - installing ufw /a"
-    apt install -y ufw
-fi
+	ufw default deny incoming
+	ufw default allow outgoing
+	ufw allow 22/tcp
+	ufw allow 80,443/tcp
+	ufw --force enable
+}
+#------------------------ install & configure  fail2ban -------------------------------------
 
-ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 80,443/tcp
-ufw --force enable
+fail2ban_bootstrap (){
+	if ! command -v fail2ban-client >/dev/null 2>&1;
+	then
+    		echo "Fail2ban not installed - Installing fail2ban...."
+		    apt install -y fail2ban
+	fi
+	systemctl enable --now fail2ban
 
-#------------------------ install fail2ban -------------------------------------
+	cat <<'EOF' > /etc/fail2ban/jail.local
+	[DEFAULT]
+	bantime = 1h
+	findtime = 10m
+	maxretry = 5
+	backend = systemd
 
+	[sshd]
+	enabled = true
+	maxretry = 3
+	bantime = 24h
 
-if ! command -v fail2ban-client >/dev/null 2>&1;
-then
-    echo "Fail2ban not installed - Installing fail2ban...."
-    apt install -y fail2ban
-fi
-systemctl enable --now fail2ban
+	[nginx-http-auth]
+	enabled = true
+	port = http,https
+	filter = nginx-http-auth
+	logpath = /var/log/nginx/error.log
 
-cat <<'EOF' > /etc/fail2ban/jail.local
-[DEFAULT]
-bantime = 1h
-findtime = 10m
-maxretry = 5
-backend = systemd
+	[nginx-badbots]
+	enabled = true
+	ports = http,https
+	filter = nginx-badbots
+	logpath = /var/log/nginx/access.log
+	maxretry = 2
 
-[sshd]
-enabled = true
-maxretry = 3
-bantime = 24h
+	[nginx-noscript]
+	enabled = true
+	EOF
+}
+# ----------------------------------------------------------------------
 
-[nginx-http-auth]
-enabled = true
-port = http,https
-filter = nginx-http-auth
-logpath = /var/log/nginx/error.log
-
-[nginx-badbots]
-enabled = true
-ports = http,https
-filter = nginx-badbots
-logpath = /var/log/nginx/access.log
-maxretry = 2
-
-[nginx-noscript]
-enabled = true
-EOF
+main
 
 mkdir -p /var/log/nginx
 
@@ -217,7 +221,9 @@ if systemctl is-active --quiet apache2; then
 fi
 
 # -----------------------------------------------------------------------
-main
+
+ufw_config
+fail2ban_bootstrap
 systemctl restart fail2ban
 fail2ban-client status
 fail2ban-client status nginx-badbots
